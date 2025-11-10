@@ -10,7 +10,7 @@ FILES=(
     "A-OKVQA.zip"
     "CIRR.zip"
     "ChartQA.zip"
-    "DocVQA.zip"
+    # "DocVQA.zip"
     # "HatefulMemes.zip"
     # "ImageNet_1K.zip"
     # "InfographicsVQA.zip"

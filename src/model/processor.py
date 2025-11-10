@@ -21,6 +21,7 @@ from src.model.baseline_backbone.internvideo2.modeling_internvideo2 import Inter
 from src.model.vlm_backbone.qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
 from src.model.vlm_backbone.qwen2_5_vl_tokenselection import \
     Qwen2_5_VLForConditionalGeneration as Qwen2_5_VL_TokenSelectionForConditionalGeneration
+from src.model.fastvlm import LlavaQwen2ForCausalLM
 
 
 PHI_IMAGE_TOKEN_MAX_INPUT_ID = int(1e9)
@@ -39,6 +40,7 @@ LamRA = 'lamra'  # QWEN2-VL
 LamRA_QWEN2_5 = 'lamra_qwen25'  # QWEN2.5-VL
 COLPALI = 'colpali'  # PaliGemma-3B
 E5_V = 'e5_v'  # Llava_next
+FASTVLM = 'llava_qwen2' # fastvlm
 MODEL2BACKBONE = {  # keys are from hf_config.model_type or manually added if not provided
     'phi3_v': PHI3V,
     'llava_next': LLAVA_NEXT,
@@ -53,6 +55,7 @@ MODEL2BACKBONE = {  # keys are from hf_config.model_type or manually added if no
     'lamra_qwen25': LamRA,
     'colpali': COLPALI,
     'e5_v': E5_V,
+    'llava_qwen2': FASTVLM,
 }
 SUPPORTED_MODELS = set(MODEL2BACKBONE.keys())
 
@@ -69,6 +72,7 @@ VLM_IMAGE_TOKENS = {
     INTERNVIDEO2: "",
     COLPALI: "",
     E5_V: "<image>",
+    FASTVLM: "<image>"
 }
 
 VLM_VIDEO_TOKENS = {
@@ -83,6 +87,7 @@ VLM_VIDEO_TOKENS = {
     INTERNVIDEO2: "",
     COLPALI: "",
     E5_V: "<image>",
+    FASTVLM: "<image>"
 }
 
 backbone2model = {
@@ -94,6 +99,7 @@ backbone2model = {
     QWEN2_5_VL_TOKENSELECTION: Qwen2_5_VL_TokenSelectionForConditionalGeneration,
     INTERNVIDEO2: InternVideo2_Stage2,
     E5_V: LlavaNextForConditionalGeneration,
+    FASTVLM: LlavaQwen2ForCausalLM,
 }
 
 

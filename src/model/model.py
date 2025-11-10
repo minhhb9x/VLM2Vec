@@ -7,7 +7,7 @@ from peft import LoraConfig, get_peft_model, PeftModel
 from src.model.processor import QWEN2_5_VL_TOKENSELECTION
 from src.arguments import ModelArguments, TrainingArguments
 from src.model.processor import LLAVA_NEXT, QWEN2_VL, PHI3V, get_backbone_name, print_master, QWEN2_5_VL, \
-    backbone2model, QWEN2_VL_TOKENSELECTION, QWEN2_5_VL_TOKENSELECTION, E5_V
+    backbone2model, QWEN2_VL_TOKENSELECTION, QWEN2_5_VL_TOKENSELECTION, E5_V, FASTVLM
 
 from src.arguments import ModelArguments
 from src.model.processor import LLAVA_NEXT, QWEN2_VL, PHI3V, get_backbone_name, print_master, QWEN2_5_VL, INTERNVIDEO2, \
@@ -174,6 +174,16 @@ class MMEBModel(nn.Module):
                 low_cpu_mem_usage=True,
                 lm_skip_layer=lm_skip_layer,
                 vis_skip_layer=vis_skip_layer,
+            )
+        elif model_backbone == FASTVLM:
+            config._attn_implementation = "flash_attention_2"
+            config.padding_side = "left"
+            config.use_cache = False
+            base_model = backbone2model[model_backbone].from_pretrained(
+                model_args.model_name,
+                config=config,
+                torch_dtype=torch.bfloat16,
+                low_cpu_mem_usage=True,
             )
         else:
             config.use_cache = False
