@@ -40,7 +40,7 @@ LamRA = 'lamra'  # QWEN2-VL
 LamRA_QWEN2_5 = 'lamra_qwen25'  # QWEN2.5-VL
 COLPALI = 'colpali'  # PaliGemma-3B
 E5_V = 'e5_v'  # Llava_next
-FASTVLM = 'llava_qwen2' # fastvlm
+LLAVA_QWEN2 = 'llava_qwen2' # fastvlm
 MODEL2BACKBONE = {  # keys are from hf_config.model_type or manually added if not provided
     'phi3_v': PHI3V,
     'llava_next': LLAVA_NEXT,
@@ -55,7 +55,7 @@ MODEL2BACKBONE = {  # keys are from hf_config.model_type or manually added if no
     'lamra_qwen25': LamRA,
     'colpali': COLPALI,
     'e5_v': E5_V,
-    'llava_qwen2': FASTVLM,
+    'llava_qwen2': LLAVA_QWEN2,
 }
 SUPPORTED_MODELS = set(MODEL2BACKBONE.keys())
 
@@ -72,7 +72,7 @@ VLM_IMAGE_TOKENS = {
     INTERNVIDEO2: "",
     COLPALI: "",
     E5_V: "<image>",
-    FASTVLM: "<image>"
+    LLAVA_QWEN2: "<image>"
 }
 
 VLM_VIDEO_TOKENS = {
@@ -87,7 +87,7 @@ VLM_VIDEO_TOKENS = {
     INTERNVIDEO2: "",
     COLPALI: "",
     E5_V: "<image>",
-    FASTVLM: "<image>"
+    LLAVA_QWEN2: "<image>"
 }
 
 backbone2model = {
@@ -99,7 +99,7 @@ backbone2model = {
     QWEN2_5_VL_TOKENSELECTION: Qwen2_5_VL_TokenSelectionForConditionalGeneration,
     INTERNVIDEO2: InternVideo2_Stage2,
     E5_V: LlavaNextForConditionalGeneration,
-    FASTVLM: LlavaQwen2ForCausalLM,
+    LLAVA_QWEN2: LlavaQwen2ForCausalLM,
 }
 
 
