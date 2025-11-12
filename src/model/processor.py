@@ -11,6 +11,8 @@ import torch
 import numpy as np
 from src.utils.basic_utils import print_master
 
+from transformers import CLIPImageProcessor, AutoTokenizer  
+
 from src.model.baseline_backbone.llava_next import LlavaNextForConditionalGeneration
 from src.model.baseline_backbone.phi3_v.modeling_phi3_v import Phi3VForCausalLM
 from src.model.vlm_backbone.qwen2_vl import Qwen2VLForConditionalGeneration, Qwen2VLProcessor
@@ -22,6 +24,7 @@ from src.model.vlm_backbone.qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
 from src.model.vlm_backbone.qwen2_5_vl_tokenselection import \
     Qwen2_5_VLForConditionalGeneration as Qwen2_5_VL_TokenSelectionForConditionalGeneration
 from src.model.fastvlm import LlavaQwen2ForCausalLM
+from src.model.fastvlm.processing_llava_qwen2 import LlavaQwen2Processor
 
 
 PHI_IMAGE_TOKEN_MAX_INPUT_ID = int(1e9)
@@ -189,6 +192,19 @@ def load_processor(model_args, data_args=None):
     elif model_args.model_backbone == COLPALI:
         from transformers import AutoProcessor
         processor = ColPaliProcessor.from_pretrained(model_args.model_name)
+    elif model_args.model_backbone == LLAVA_QWEN2:
+        print_master("Customized: load LlavaQwen2Processor")
+        image_processor = CLIPImageProcessor(crop_size={"height": 1024,
+                                    "width": 1024},
+                                    image_mean=[0.0, 0.0, 0.0],
+                                    image_std=[1.0, 1.0, 1.0],
+                                    size={"shortest_edge": 1024}) # temporary hardcode for llava qwen2 processor
+        
+        tokenizer = AutoTokenizer.from_pretrained(model_args.model_name, use_fast=False)
+        processor = LlavaQwen2Processor(image_processor = image_processor,
+                                        tokenizer=tokenizer)
+        
+
     else:
         from transformers import AutoProcessor
         processor = AutoProcessor.from_pretrained(
@@ -632,6 +648,10 @@ def InternVideo2_process_fn(model_inputs: dict, processor, max_length=None):
 
     return inputs
 
+def LlavaQwen2_process_fn(model_inputs: dict, processor: LlavaQwen2Processor, max_length=None):
+    texts, visual_inputs = model_inputs['text'], model_inputs['images']
+    inputs = processor(text=texts, images=visual_inputs)
+    return inputs
 
 def e5_v_prompt_template(text, add_video_token, add_image_token):
     llama3_template = '<|start_header_id|>user<|end_header_id|>\n\n{}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n \n'
@@ -693,4 +713,5 @@ process_vlm_inputs_fns = {
     LamRA_QWEN2_5: Gme_process_fn,
     COLPALI: ColPali_process_fn,
     E5_V: Llava_NEXT_process_fn,
+    LLAVA_QWEN2: LlavaQwen2_process_fn,
 }
