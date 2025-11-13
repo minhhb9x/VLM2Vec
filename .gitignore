@@ -51,6 +51,7 @@ Thumbs.db
 
 /data
 /exps
+/runs
 
 **/MMEB-train/**
 image-tasks/**

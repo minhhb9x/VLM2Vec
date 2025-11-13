@@ -9,7 +9,6 @@ ninja
 numpy==1.26.4
 opencv-contrib-python
 opencv-python
-peft
 pillow
 py-cpuinfo
 pytrec-eval
@@ -24,6 +23,7 @@ torch
 torchvision
 tqdm
 transformers==4.49.0
+peft==0.10.0
 wandb
 wrapt
 datasets
