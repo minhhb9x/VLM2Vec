@@ -53,4 +53,5 @@ Thumbs.db
 /exps
 
 **/MMEB-train/**
+image-tasks/**
 venv/** 
