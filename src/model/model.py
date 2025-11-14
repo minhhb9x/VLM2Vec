@@ -224,7 +224,12 @@ class MMEBModel(nn.Module):
     def load(cls, model_args: ModelArguments, is_trainable=True, **kwargs):
         # Loading the base model
         model_name_or_path = model_args.checkpoint_path if model_args.checkpoint_path else model_args.model_name
-        config = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=True)
+        try:
+            config = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=True)
+        except ValueError as e:
+            print_master(f"Failed to load config from {model_name_or_path}: {e}")
+            print_master("Falling back to default config or manual specification.")
+            config = AutoConfig.from_pretrained(model_args.model_name, trust_remote_code=True)
         if not hasattr(model_args, "model_backbone") or not model_args.model_backbone:
             model_backbone = get_backbone_name(hf_config=config, model_type=model_args.model_type)
             setattr(model_args, 'model_backbone', model_backbone)

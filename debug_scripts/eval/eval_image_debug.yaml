@@ -17,12 +17,12 @@
 #     dataset_split: test
 #     image_root: image-tasks/
 #     eval_type: local
-VOC2007:
-    dataset_parser: image_cls
-    dataset_name: VOC2007
-    dataset_split: test
-    image_root: image-tasks/
-    eval_type: local
+# VOC2007:
+#     dataset_parser: image_cls
+#     dataset_name: VOC2007
+#     dataset_split: test
+#     image_root: image-tasks/
+#     eval_type: local
 # SUN397:
 #     dataset_parser: image_cls
 #     dataset_name: SUN397
@@ -66,12 +66,12 @@ VOC2007:
 #     dataset_split: test
 #     image_root: image-tasks/
 #     eval_type: local
-# A-OKVQA:
-#     dataset_parser: image_qa
-#     dataset_name: A-OKVQA
-#     dataset_split: test
-#     image_root: image-tasks/
-#     eval_type: local
+A-OKVQA:
+    dataset_parser: image_qa
+    dataset_name: A-OKVQA
+    dataset_split: test
+    image_root: image-tasks/
+    eval_type: local
 # DocVQA:
 #     dataset_parser: image_qa
 #     dataset_name: DocVQA

@@ -4,8 +4,9 @@
 # 🔧 Basic configuration
 # =========================================================
 
-# MODEL_NAME="apple/FastVLM-0.5B"
-MODEL_NAME="TIGER-Lab/VLM2Vec-Qwen2VL-2B"
+MODEL_NAME="apple/FastVLM-0.5B"
+# MODEL_NAME="TIGER-Lab/VLM2Vec-Qwen2VL-2B"
+CHECKPOINT_PATH="runs/debug_model/checkpoint-50"
 EXP_NAME="debug_eval_model"
 EXP_DIR="./exps/$EXP_NAME"
 
@@ -43,7 +44,8 @@ python eval.py \
   --resize_use_processor false \
   --image_resolution high \
   --dataset_config debug_scripts/eval/eval_image_debug.yaml \
-  --per_device_eval_batch_size 16 \
+  --per_device_eval_batch_size 24 \
+  --checkpoint_path "$CHECKPOINT_PATH" \
   --encode_output_path "$ENCODE_DIR"
 
 echo "✅ Evaluation completed. Results saved in: $ENCODE_DIR"

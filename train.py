@@ -18,7 +18,7 @@ from src.arguments import ModelArguments, DataArguments, TrainingArguments
 from src.data.collator.train_collator import MultimodalDataCollator
 from src.data.loader.mixed_dataset import init_mixed_dataset
 from src.model.model import MMEBModel
-from src.trainer import GradCacheLateProcessTrainer
+from src.trainer import GradCacheLateProcessTrainer, MMEBTrainer
 from src.utils.basic_utils import print_rank, print_master, find_latest_checkpoint
 from src.model.processor import load_processor, get_backbone_name
 
@@ -94,7 +94,13 @@ def main():
         train_dataset = init_mixed_dataset(dataset_config, model_args, data_args, training_args)
     train_collator = MultimodalDataCollator(processor, model_args, data_args, training_args)
 
-    trainer_cls = GradCacheLateProcessTrainer
+    if training_args.grad_cache:
+        print_rank("Using GradCacheLateProcessTrainer")
+        trainer_cls = GradCacheLateProcessTrainer
+    else:
+        print_rank("Using MMEBTrainer")
+        trainer_cls = MMEBTrainer
+
     trainer = trainer_cls(
         model=model,
         processing_class=processor,

@@ -68,6 +68,12 @@ logger = logging.get_logger(__name__)
 
 class MMEBTrainer(Trainer):
     def __init__(self, *args, **kwargs):
+        self.max_length = kwargs.get("max_length", 512)
+        if "max_length" in kwargs:
+            del kwargs["max_length"]
+        self.model_args = kwargs.get("model_args", None)
+        if "model_args" in kwargs:
+            del kwargs["model_args"]
         super(MMEBTrainer, self).__init__(*args, **kwargs)
         self.is_ddp = dist.is_initialized()
         self.processor = self.processing_class
