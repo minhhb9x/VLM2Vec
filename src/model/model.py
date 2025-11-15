@@ -176,7 +176,7 @@ class MMEBModel(nn.Module):
                 vis_skip_layer=vis_skip_layer,
             )
         elif model_backbone in [LLAVA_QWEN2]:
-            config._attn_implementation = "flash_attention_2"
+            config._attn_implementation = "eager"
             config.use_cache = False
             base_model = backbone2model[model_backbone].from_pretrained(
                 model_args.model_name,
@@ -271,10 +271,10 @@ class MMEBModel(nn.Module):
             setattr(base_model, 'config', config)
         elif model_args.model_backbone == LLAVA_QWEN2:
             config = AutoConfig.from_pretrained(model_args.model_name, trust_remote_code=True)
-            config._attn_implementation = "flash_attention_2"
+            config._attn_implementation = "eager"
             config.use_cache = False
             base_model = backbone2model[model_args.model_backbone].from_pretrained(
-                model_args.model_name,
+                model_name_or_path,
                 config=config,
                 torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True
