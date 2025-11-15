@@ -28,7 +28,7 @@ python train.py \
   --warmup_steps 100 \
   --max_steps 2000 \
   --save_steps 100 \
-  --logging_steps 50 \
+  --logging_steps 10 \
   --save_safetensors True \
   --remove_unused_columns False \
   --report_to none 2>&1 | tee $EXP_DIR/train.log
