@@ -6,7 +6,7 @@
 
 MODEL_NAME="apple/FastVLM-0.5B"
 # MODEL_NAME="TIGER-Lab/VLM2Vec-Qwen2VL-2B"
-CHECKPOINT_PATH="runs/FastVLM-0.5B"
+CHECKPOINT_PATH="runs/FastVLM-0.5B/checkpoint-7500"
 EXP_NAME="eval_small_model"
 EXP_DIR="./exps/$EXP_NAME"
 

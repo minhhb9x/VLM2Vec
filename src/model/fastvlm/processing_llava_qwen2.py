@@ -6,16 +6,24 @@ from builtins import NotImplementedError
 
 from typing import Optional, Union, List
 import torch
+import numpy as np
 
 import PIL
 
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import ImageInput
 
+from transformers import CLIPImageProcessor
 from src.model.fastvlm.mm_utils import tokenizer_image_token, IMAGE_TOKEN_INDEX, expand2square
 from transformers.processing_utils import ProcessingKwargs, ProcessorMixin, Unpack
 from transformers.tokenization_utils_base import PreTokenizedInput, TextInput
 from transformers.utils import logging
+from src.utils.basic_utils import print_master
+
+def to_rgb(image: ImageInput):
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    return image
 
 
 def concat_images_vertical(images: list):
@@ -77,9 +85,26 @@ class LlavaQwen2Processor(ProcessorMixin):
                     placeholder = torch.zeros(3, H, W)
                     batch_images.append(placeholder)
                 else:
-                    # concat các ảnh trong sample
+                    imgs = [to_rgb(i) for i in imgs]
+                    # concat images in sample
                     imgs = concat_images_vertical([i for i in imgs if i is not None])
-                    img_tensor = image_processor.preprocess(imgs, return_tensors='pt')['pixel_values'][0]
+                    try:
+                        img_tensor = image_processor.preprocess(
+                            imgs, 
+                            input_data_format="channels_last",
+                            return_tensors='pt'
+                        )['pixel_values'][0]
+                    except Exception as e:
+                        print_master("=== ERROR in image preprocessing ===")
+                        print_master(f"Exception: {e}")
+                        print_master(f"Type of imgs: {type(imgs)}")
+                        if isinstance(imgs, PIL.Image.Image):
+                            print_master(f"Image mode: {imgs.mode}")
+                            print_master(f"Image size: {imgs.size}")
+                            print_master(f"Image array shape: {np.array(imgs).shape}")
+                        else:
+                            print_master(f"Imgs content: {imgs}")
+                        raise e  # terminate chương trình sau khi in debug info
                     batch_images.append(img_tensor)
             images = torch.stack(batch_images)
         else:

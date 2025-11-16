@@ -49,6 +49,8 @@ workspace.xml
 ehthumbs.db
 Thumbs.db
 
+*.env 
+
 /data
 /exps
 /runs

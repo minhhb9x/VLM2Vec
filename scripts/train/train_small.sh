@@ -16,6 +16,7 @@ python train.py \
   --lora --lora_r 16 \
   --model_name apple/FastVLM-0.5B \
   --bf16 --pooling eos --normalize True --temperature 0.02 \
+  --dataloader_num_workers 16 \
   --dataset_config scripts/train/train_image.yaml \
   --image_resolution mid \
   --run_name $EXP_NAME --output_dir $EXP_DIR \
@@ -27,7 +28,9 @@ python train.py \
   --interleave_batch_size 4 \
   --lr_scheduler_type linear \
   --warmup_steps 100 \
-  --max_steps 5000 \
+  --max_steps 10000 \
+  --resume_from auto \
+  --ignore_data_skip False \
   --save_steps 100 \
   --logging_steps 1 \
   --save_total_limit 2 \
