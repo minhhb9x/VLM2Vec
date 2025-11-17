@@ -6,7 +6,7 @@
 
 MODEL_NAME="apple/FastVLM-0.5B"
 # MODEL_NAME="TIGER-Lab/VLM2Vec-Qwen2VL-2B"
-CHECKPOINT_PATH="runs/FastVLM-0.5B/checkpoint-7500"
+CHECKPOINT_PATH="runs/FastVLM-0.5B"
 EXP_NAME="eval_small_model"
 EXP_DIR="./exps/$EXP_NAME"
 
@@ -44,7 +44,8 @@ python eval.py \
   --resize_use_processor false \
   --image_resolution high \
   --dataset_config scripts/eval/eval_image.yaml \
-  --per_device_eval_batch_size 48 \
+  --per_device_eval_batch_size 64 \
+  --dataloader_num_workers 16 \
   --checkpoint_path "$CHECKPOINT_PATH" \
   --encode_output_path "$ENCODE_DIR"
 
