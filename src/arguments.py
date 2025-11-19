@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from transformers import TrainingArguments
 from typing import List
 
@@ -71,3 +71,38 @@ class MTEBArguments:
     task_types: List[str] = field(default=None, metadata={"help": ""})
     tasks: List[str] = field(default=None, metadata={"help": ""})
     prompt_family: List[str] = field(default=None, metadata={"help": ""})
+
+
+@dataclass
+class TeacherArguments:
+    teacher_model_name: str = field(metadata={"help": "huggingface model name or path"})
+    teacher_model_type: str = field(default=None, metadata={"help": "model type, typically includes in config file, but sometimes needs mannually add"})
+    teacher_processor_name: str = field(default=None, metadata={"help": "processor_name, huggingface model name or path"})
+    teacher_model_backbone: str = field(default=None, metadata={"help": "HF model type"})
+    teacher_checkpoint_path: str = field(default=None, metadata={"help": "a local model path, could be a LoRA version"})
+    teacher_pooling: str = field(default='last', metadata={"help": "pooling method for encoder"})
+    teacher_normalize: bool = field(default=False, metadata={"help": "normalize query and passage representations"})
+    teacher_temperature: float = field(default=0.02, metadata={"help": "temperature for softmax"})
+    teacher_lora: bool = field(default=False, metadata={"help": "do parameter-efficient fine-tuning with lora"})
+    teacher_lora_r: int = field(default=16, metadata={"help": "lora r"})
+    teacher_lora_alpha: int = field(default=64, metadata={"help": "lora alpha"})
+    teacher_lora_dropout: float = field(default=0.1, metadata={"help": "lora dropout"})
+    teacher_lora_target_modules: str = field(default="qkv_proj,o_proj,gate_up_proj,down_proj,k_proj,q_proj,out_proj,v_proj", metadata={"help": "lora target modules"})
+    teacher_num_crops: int = field(default=16, metadata={"help": "number of crops used in image encoder"})
+    teacher_uigraph_use: bool = field(default=False, metadata={"help": "Enable ui graph for token selection"})
+    teacher_uigraph_diff: int = field(default=1, metadata={"help": "Pixel difference used for constructing ui graph for token selection"})
+    teacher_uigraph_rand: bool = field(default=False, metadata={"help": "Enable random graph construction for token selection"})
+    teacher_uimask_ratio: float = field(default=0.5, metadata={"help": "Specify the percentage of patch tokens to skip per component for token selection"})
+    teacher_uimask_rand: bool = field(default=False, metadata={"help": "Enable random token selection instead of uniform selection"})
+    teacher_lm_skip_layer: str = field(default='[1,28,0]', metadata={"help": "Specify the layers of the language model to skip for token selection"})
+    teacher_vis_skip_layer: str = field(default='[1,32,0]', metadata={"help": "Specify the layers of the vision model to skip for token selection"})
+
+
+def map_teacher_to_model_args(teacher: TeacherArguments) -> ModelArguments:
+    kwargs = {}
+    for f in fields(teacher):
+        name = f.name
+        if name.startswith("teacher_"):
+            base_name = name[len("teacher_"):]  # remove prefix
+            kwargs[base_name] = getattr(teacher, name)
+    return ModelArguments(**kwargs)
