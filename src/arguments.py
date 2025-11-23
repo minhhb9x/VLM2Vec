@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, fields
 from transformers import TrainingArguments
-from typing import List
+from typing import List, Union
 
 
 @dataclass
@@ -98,11 +98,13 @@ class TeacherArguments:
     teacher_vis_skip_layer: str = field(default='[1,32,0]', metadata={"help": "Specify the layers of the vision model to skip for token selection"})
 
 
-def map_teacher_to_model_args(teacher: TeacherArguments) -> ModelArguments:
+def map_teacher_to_model_args(teacher: Union[TeacherArguments, ModelArguments]) -> ModelArguments:
     kwargs = {}
     for f in fields(teacher):
         name = f.name
         if name.startswith("teacher_"):
             base_name = name[len("teacher_"):]  # remove prefix
             kwargs[base_name] = getattr(teacher, name)
+        else:
+            kwargs[name] = getattr(teacher, name)
     return ModelArguments(**kwargs)

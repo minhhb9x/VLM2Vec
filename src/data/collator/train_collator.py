@@ -5,7 +5,7 @@ from torch.jit import isinstance
 import logging
 from dataclasses import dataclass
 from transformers import ProcessorMixin, AutoProcessor, AutoTokenizer
-from src.arguments import DataArguments, ModelArguments, TrainingArguments
+from src.arguments import DataArguments, ModelArguments, TrainingArguments, map_teacher_to_model_args
 import torch
 from qwen_vl_utils import smart_resize
 

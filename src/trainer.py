@@ -434,7 +434,7 @@ class MMEBTrainer(Trainer):
                     step += 1
                     total_batched_samples += 1
 
-                    dataset_stat = collections.Counter(inputs[0]['global_dataset_name'])
+                    # dataset_stat = collections.Counter(inputs[0]['global_dataset_name'])
                     # print_rank(f"dataset name: {str(set(inputs[0]['global_dataset_name']))}")
                     # for dname, count in sorted(dataset_stat.items(), key=lambda t:t[1], reverse=True):
                     #     print_rank(f"\t\tdataset_name={dname}, count={count}")
