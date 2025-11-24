@@ -132,9 +132,9 @@ class DistillationModel(nn.Module):
         all_tensors = torch.cat(all_tensors, dim=0)
         return all_tensors
 
-    def forward(self, **inputs):
-        student_input = inputs['student_inputs']
-        teacher_input = inputs['teacher_inputs']
+    def forward(self, inputs):
+        student_input = inputs['student']
+        teacher_input = inputs['teacher']
 
         stu_qry_reps = self.student.encode_input(student_input[0]) if student_input[0] else None
         stu_tgt_reps = self.student.encode_input(student_input[1]) if student_input[1] else None

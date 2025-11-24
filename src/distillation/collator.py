@@ -47,6 +47,9 @@ class DistillMultimodalDataCollator:
         )
 
     def __call__(self, examples):
+        if isinstance(examples, dict):
+            examples = [examples]
+
         student_examples = [
             {
                 "query_text": ex["student_query_text"],

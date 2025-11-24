@@ -33,6 +33,7 @@ python train_distill.py \
   --logging_steps 1 \
   --save_total_limit 2 \
   --seed 42 \
+  --dataloader_num_workers 16 \
   --save_safetensors True \
   --remove_unused_columns False \
   --teacher_model_name TIGER-Lab/VLM2Vec-Qwen2VL-2B \

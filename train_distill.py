@@ -1,6 +1,7 @@
 import logging
 import os.path
 import sys
+from typing import Any, Union, Mapping
 
 logging.basicConfig(
     level=logging.INFO, format='[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s',
@@ -16,7 +17,7 @@ from torch.utils.data import DataLoader
 
 from transformers import HfArgumentParser
 from src.arguments import ModelArguments, DataArguments, TeacherArguments, TrainingArguments
-from src.data.collator.train_collator import MultimodalDataCollator
+from src.utils.basic_utils import batch_to_device
 from src.data.loader.mixed_dataset import init_mixed_distill_dataset
 from src.distillation.model import DistillationModel
 from src.distillation.trainer import DistillTrainer
@@ -64,7 +65,7 @@ def main():
     teacher_args = model_info['teacher_args']
     data_args = model_info['data_args']
     training_args = model_info['training_args']
-
+    
     with open(data_args.dataset_config, 'r') as yaml_file:
         dataset_config = yaml.safe_load(yaml_file)
         if data_args.data_basedir:
@@ -81,6 +82,31 @@ def main():
         training_args=training_args,
         teacher_model_args=teacher_args,
         batch_size=training_args.per_device_train_batch_size,)
+    
+    dataloader = DataLoader(
+        train_dataset,
+        batch_size=training_args.per_device_train_batch_size,
+        shuffle=False,
+        collate_fn=train_collator,
+        num_workers=training_args.dataloader_num_workers,
+    )
+    distill_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    batch = next(iter(dataloader))
+    
+    student_qry, student_pos = batch['student']
+    teacher_qry, teacher_pos = batch['teacher']
+    student_qry = batch_to_device(student_qry, distill_model.student.device)
+    student_pos = batch_to_device(student_pos, distill_model.student.device)
+    teacher_qry = batch_to_device(teacher_qry, distill_model.teacher.device)
+    teacher_pos = batch_to_device(teacher_pos, distill_model.teacher.device)
+    batch['student'] = (student_qry, student_pos)
+    batch['teacher'] = (teacher_qry, teacher_pos)
+
+    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+        output = distill_model(batch)
+
+    print(output['student_query_reps'].shape)
+    print(output['teacher_query_reps'].shape)
     
 if __name__ == "__main__":
     main()
