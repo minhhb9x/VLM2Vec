@@ -47,8 +47,35 @@ class DistillMultimodalDataCollator:
         )
 
     def __call__(self, examples):
-        student_batch = self.student_collator(examples)
-        teacher_batch = self.teacher_collator(examples)
+        student_examples = [
+            {
+                "query_text": ex["student_query_text"],
+                "pos_text": ex["student_pos_text"],
+                "neg_text": ex["student_neg_text"],
+                "query_image": ex["query_image"],
+                "pos_image": ex["pos_image"],
+                "neg_image": ex["neg_image"],
+                "global_dataset_name": ex["global_dataset_name"],
+            }
+            for ex in examples
+        ]
+
+        teacher_examples = [
+            {
+                "query_text": ex["teacher_query_text"],
+                "pos_text": ex["teacher_pos_text"],
+                "neg_text": ex["teacher_neg_text"],
+                "query_image": ex["query_image"],
+                "pos_image": ex["pos_image"],
+                "neg_image": ex["neg_image"],
+                "global_dataset_name": ex["global_dataset_name"],
+            }
+            for ex in examples
+        ]
+
+        student_batch = self.student_collator(student_examples)
+        teacher_batch = self.teacher_collator(teacher_examples)
+
         return {
             'student': student_batch,
             'teacher': teacher_batch,

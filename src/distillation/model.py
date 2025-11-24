@@ -34,6 +34,10 @@ class DistillationModel(nn.Module):
         if self.is_ddp:
             self.process_rank = dist.get_rank()
             self.world_size = dist.get_world_size()
+        
+        for p in teacher.parameters():
+            p.requires_grad = False
+        teacher.eval() 
     
     @property
     def device(self):
@@ -135,8 +139,9 @@ class DistillationModel(nn.Module):
         stu_qry_reps = self.student.encode_input(student_input[0]) if student_input[0] else None
         stu_tgt_reps = self.student.encode_input(student_input[1]) if student_input[1] else None
 
-        tea_qry_reps = self.teacher.encode_input(teacher_input[0]) if teacher_input[0] else None
-        tea_tgt_reps = self.teacher.encode_input(teacher_input[1]) if teacher_input[1] else None
+        with torch.no_grad():
+            tea_qry_reps = self.teacher.encode_input(teacher_input[0]) if teacher_input[0] else None
+            tea_tgt_reps = self.teacher.encode_input(teacher_input[1]) if teacher_input[1] else None
 
         return {
             'student_query_reps': stu_qry_reps,
