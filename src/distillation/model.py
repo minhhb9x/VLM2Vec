@@ -5,7 +5,7 @@ import sys
 # PROJECT_ROOT = "/workspace/VLM2Vec"
 # sys.path.append(PROJECT_ROOT)
 
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 import torch
 import torch.distributed as dist
 from torch import nn, Tensor
@@ -30,6 +30,8 @@ class DistillationModel(nn.Module):
         super(DistillationModel, self).__init__()
         self.student = student
         self.teacher = teacher
+        self.build_student_adapters()
+        self.build_teacher_adapters()
         self.is_ddp = dist.is_initialized()
         if self.is_ddp:
             self.process_rank = dist.get_rank()
@@ -38,6 +40,16 @@ class DistillationModel(nn.Module):
         for p in teacher.parameters():
             p.requires_grad = False
         teacher.eval() 
+    
+    def build_teacher_adapters(self):
+        student_hidden_size = self.student.config.hidden_size
+        teacher_hidden_size = self.teacher.config.hidden_size
+        self.teacher_adapter = nn.Linear(teacher_hidden_size, student_hidden_size)
+    
+    def build_student_adapters(self):
+        student_hidden_size = self.student.config.hidden_size
+        teacher_hidden_size = self.teacher.config.hidden_size
+        self.student_adapter = nn.Linear(student_hidden_size, teacher_hidden_size)
     
     @property
     def device(self):
@@ -102,8 +114,37 @@ class DistillationModel(nn.Module):
             "training_args": training_args,
         }
 
-    def save(self, output_dir: str):
-        self.student.encoder.save_pretrained(output_dir)
+    def save(self, output_dir: str, **kwargs):
+        full_state_dict = kwargs.pop("state_dict", None)
+        
+        student_state_dict = None
+        if full_state_dict is not None:
+            prefix = "student.encoder."
+            student_state_dict = {
+                k[len(prefix):]: v 
+                for k, v in full_state_dict.items() 
+                if k.startswith(prefix) # <--- Chỉ lấy student
+            }
+        
+        self.student.encoder.save_pretrained(
+            output_dir, 
+            state_dict=student_state_dict, 
+            **kwargs 
+        )
+
+        if full_state_dict is not None:
+            s_adapter_state = {k:v for k,v in full_state_dict.items() if "student_adapter" in k}
+            t_adapter_state = {k:v for k,v in full_state_dict.items() if "teacher_adapter" in k}
+        else:
+            s_adapter_state = self.student_adapter.state_dict()
+            t_adapter_state = self.teacher_adapter.state_dict()
+
+        # Lưu adapter ra file bé xíu (vài MB)
+        adapter_state = {
+            "student_adapter": s_adapter_state,
+            "teacher_adapter": t_adapter_state
+        }
+        torch.save(adapter_state, os.path.join(output_dir, "distill_adapters.bin"))
 
     @classmethod
     def load(cls, 
@@ -122,6 +163,16 @@ class DistillationModel(nn.Module):
                                  is_trainable=is_trainable, 
                                  processor=student_processor)
         setattr(model, 'student', student)
+        if student_args.checkpoint_path:
+            load_dir = student_args.checkpoint_path
+            # check if distill_adapters.bin exists
+            adapter_path = os.path.join(load_dir, "distill_adapters.bin")
+            if os.path.exists(adapter_path):
+                adapter_state = torch.load(adapter_path)
+                model.student_adapter.load_state_dict(adapter_state['student_adapter'])
+                model.teacher_adapter.load_state_dict(adapter_state['teacher_adapter'])
+            else:
+                print_rank(f"No adapter state found at {adapter_path}, skipping adapter loading.")
         return model_info
     
     def _dist_gather_tensor(self, t: Tensor):

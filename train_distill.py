@@ -74,39 +74,24 @@ def main():
                 if image_dir and not os.path.isabs(image_dir):
                     task_config['image_dir'] = os.path.join(data_args.data_basedir, image_dir)
         train_dataset = init_mixed_distill_dataset(dataset_config, student_args, teacher_args, data_args, training_args)
-    train_collator = DistillMultimodalDataCollator(
-        student_processor=student_processor,
-        teacher_processor=teacher_processor,
-        student_model_args=student_args,
-        data_args=data_args,
-        training_args=training_args,
-        teacher_model_args=teacher_args,
-        batch_size=training_args.per_device_train_batch_size,)
+    # train_collator = DistillMultimodalDataCollator(
+    #     student_processor=student_processor,
+    #     teacher_processor=teacher_processor,
+    #     student_model_args=student_args,
+    #     data_args=data_args,
+    #     training_args=training_args,
+    #     teacher_model_args=teacher_args,
+    #     batch_size=training_args.per_device_train_batch_size,)
     
-    dataloader = DataLoader(
-        train_dataset,
-        batch_size=training_args.per_device_train_batch_size,
-        shuffle=False,
-        collate_fn=train_collator,
-        num_workers=training_args.dataloader_num_workers,
-    )
-    distill_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-    batch = next(iter(dataloader))
-    
-    student_qry, student_pos = batch['student']
-    teacher_qry, teacher_pos = batch['teacher']
-    student_qry = batch_to_device(student_qry, distill_model.student.device)
-    student_pos = batch_to_device(student_pos, distill_model.student.device)
-    teacher_qry = batch_to_device(teacher_qry, distill_model.teacher.device)
-    teacher_pos = batch_to_device(teacher_pos, distill_model.teacher.device)
-    batch['student'] = (student_qry, student_pos)
-    batch['teacher'] = (teacher_qry, teacher_pos)
+    # dataloader = DataLoader(
+    #     train_dataset,
+    #     batch_size=training_args.per_device_train_batch_size,
+    #     shuffle=False,
+    #     collate_fn=train_collator,
+    #     num_workers=training_args.dataloader_num_workers,
+    # )
 
-    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-        output = distill_model(batch)
 
-    print(output['student_query_reps'].shape)
-    print(output['teacher_query_reps'].shape)
     
 if __name__ == "__main__":
     main()

@@ -49,30 +49,44 @@ class DistillTrainer(MMEBTrainer):
             **kwargs)
 
 
+    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
+        logger.info(f"Loading checkpoint from {resume_from_checkpoint}")
+        
+        if not isinstance(self.model, DistillationModel):
+            self.student_args.checkpoint_path = resume_from_checkpoint
+            student = MMEBModel.load(self.student_args)
+            teacher = MMEBModel.load(self.teacher_args, is_trainable=False)
+            self.model = DistillationModel(student=student, teacher=teacher)
+        
+        full_distill_model = self.model 
+        
+        self.model = full_distill_model.student 
+        
+        super()._load_from_checkpoint(resume_from_checkpoint, model=self.model)
+        
+        self.model = full_distill_model
+        
+        self.model_wrapped = self.model
+
+        adapter_path = os.path.join(resume_from_checkpoint, "distill_adapters.bin")
+        if os.path.exists(adapter_path):
+            logger.info(f"Loading adapters from {adapter_path}")
+            adapter_state = torch.load(adapter_path, map_location="cpu")
+            
+            self.model.student_adapter.load_state_dict(adapter_state['student_adapter'])
+            self.model.teacher_adapter.load_state_dict(adapter_state['teacher_adapter'])
+        else:
+            logger.warning(f"No adapter weights found at {adapter_path}, using random init.")
+
+    
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         print_master(f"Saving student model to {output_dir}")
         os.makedirs(output_dir, exist_ok=True)
 
         if state_dict is None:
-            state_dict = self.model.student.state_dict()
-        prefix = 'encoder.'
-        assert all(k.startswith(prefix) for k in state_dict.keys()), list(state_dict.keys())
-        state_dict = {k[len(prefix):]: v for k, v in state_dict.items()}
-        self.model.student.encoder.save_pretrained(
+            state_dict = self.model.state_dict()
+        self.model.save(
             output_dir, state_dict=state_dict, safe_serialization=self.args.save_safetensors
         )
 
-        if self.tokenizer is not None:
-            self.tokenizer.save_pretrained(output_dir)
-
-        torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))
         self.model.student.encoder.config.to_json_file(os.path.join(output_dir, 'config.json'))
-
-
-    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
-        self.student_args.checkpoint_path = resume_from_checkpoint
-        logger.info(f"Loading student checkpoint from {resume_from_checkpoint}")
-        student = MMEBModel.load(self.student_args)
-        teacher = MMEBModel.load(self.teacher_args, is_trainable=False)
-        self.model = DistillationModel(student=student, teacher=teacher)
-        self.model_wrapped = self.model
