@@ -70,6 +70,9 @@ class LlavaQwen2Processor(ProcessorMixin):
         if not isinstance(text, list):
             text = [text]
         
+        if images is not None and not isinstance(images, list):
+            images = [images]
+        
         input_ids = [tokenizer_image_token(t, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt') for t in text]
         input_ids = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=tokenizer.pad_token_id)
 
@@ -79,32 +82,40 @@ class LlavaQwen2Processor(ProcessorMixin):
         batch_images = []
         if images is not None:
             for imgs in images:
-                if imgs is None or all(i is None for i in imgs):
+                if imgs is None or (isinstance(imgs, list) and all(i is None for i in imgs)):
                     # tạo placeholder image tensor
                     H, W = image_processor.crop_size['height'], image_processor.crop_size['width']
                     placeholder = torch.zeros(3, H, W)
                     batch_images.append(placeholder)
                 else:
-                    imgs = [to_rgb(i) for i in imgs]
-                    # concat images in sample
-                    imgs = concat_images_vertical([i for i in imgs if i is not None])
-                    try:
+                    if isinstance(imgs, list):
+                        imgs = [to_rgb(i) for i in imgs]
+                        # concat images in sample
+                        imgs = concat_images_vertical([i for i in imgs if i is not None])
+                        try:
+                            img_tensor = image_processor.preprocess(
+                                imgs, 
+                                input_data_format="channels_last",
+                                return_tensors='pt'
+                            )['pixel_values'][0]
+                        except Exception as e:
+                            print_master("=== ERROR in image preprocessing ===")
+                            print_master(f"Exception: {e}")
+                            print_master(f"Type of imgs: {type(imgs)}")
+                            if isinstance(imgs, PIL.Image.Image):
+                                print_master(f"Image mode: {imgs.mode}")
+                                print_master(f"Image size: {imgs.size}")
+                                print_master(f"Image array shape: {np.array(imgs).shape}")
+                            else:
+                                print_master(f"Imgs content: {imgs}")
+                            raise e  # terminate chương trình sau khi in debug info
+                    else:
+                        imgs = to_rgb(imgs)
                         img_tensor = image_processor.preprocess(
                             imgs, 
                             input_data_format="channels_last",
                             return_tensors='pt'
                         )['pixel_values'][0]
-                    except Exception as e:
-                        print_master("=== ERROR in image preprocessing ===")
-                        print_master(f"Exception: {e}")
-                        print_master(f"Type of imgs: {type(imgs)}")
-                        if isinstance(imgs, PIL.Image.Image):
-                            print_master(f"Image mode: {imgs.mode}")
-                            print_master(f"Image size: {imgs.size}")
-                            print_master(f"Image array shape: {np.array(imgs).shape}")
-                        else:
-                            print_master(f"Imgs content: {imgs}")
-                        raise e  # terminate chương trình sau khi in debug info
                     batch_images.append(img_tensor)
             images = torch.stack(batch_images)
         else:
