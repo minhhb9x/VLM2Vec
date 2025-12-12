@@ -1968,7 +1968,7 @@ class Qwen2VLForConditionalGeneration(Qwen2VLPreTrainedModel, GenerationMixin):
                         )
                         image_embeds = image_embeds.to(inputs_embeds.device, inputs_embeds.dtype)
                         inputs_embeds_w_image = inputs_embeds_w_image.masked_scatter(image_mask, image_embeds)
-                        merged_inputs_embeds.append(inputs_embeds_w_image)
+                        merged_inputs_embeds.append(inputs_embeds_w_image) 
                     if len(idx_wo_image):
                         inputs_embeds_wo_image = torch.stack([inputs_embeds[i] for i in idx_wo_image])
                         merged_inputs_embeds.append(inputs_embeds_wo_image)
